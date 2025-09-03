@@ -20,18 +20,15 @@ data = pd.DataFrame({
     'season': np.random.choice(['summer','monsoon','winter'], n)
 })
 
-# Encode season (consistent dummy columns)
+
 data = pd.get_dummies(data, columns=['season'])
-# Ensure all season columns are present
+
 for col in ["season_summer", "season_monsoon", "season_winter"]:
     if col not in data.columns:
         data[col] = 0
 
-# Drop first to avoid dummy variable trap (optional)
-# OR keep all and let model decide → here we keep all for safety
 X = data.drop('outbreak', axis=1, errors="ignore")
 
-# Target variable
 data['outbreak'] = ((data['bacteria'] == 1) &
                     (data['rainfall'] > 80) &
                     (data['cases_last_week'] > 10)).astype(int)
@@ -39,12 +36,9 @@ data['outbreak'] = ((data['bacteria'] == 1) &
 X = data.drop('outbreak', axis=1)
 y = data['outbreak']
 
-# Save training columns for later use
 training_columns = X.columns.tolist()
 
-# ---------------------------
-# 2. Train Model
-# ---------------------------
+
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
@@ -65,12 +59,11 @@ model.fit(X_train, y_train)
 # ---------------------------
 # 3. Streamlit App UI
 # ---------------------------
-st.title("🌍 Smart Health Monitoring - Outbreak Prediction")
+st.title("Smart Health Monitoring - Outbreak Prediction")
 st.write("Prototype ML model using **XGBoost** to predict water-borne disease outbreak risk.")
 
 st.sidebar.header("Input Parameters")
 
-# Sidebar inputs
 turbidity = st.sidebar.slider("Water Turbidity", 1.0, 10.0, 5.0)
 pH = st.sidebar.slider("Water pH", 6.0, 8.0, 7.0)
 bacteria = st.sidebar.selectbox("Bacteria Presence", [0, 1])
@@ -78,10 +71,6 @@ rainfall = st.sidebar.slider("Rainfall (mm)", 0.0, 200.0, 50.0)
 cases_last_week = st.sidebar.slider("Reported Cases Last Week", 0, 30, 5)
 season = st.sidebar.selectbox("Season", ["summer", "monsoon", "winter"])
 
-# ---------------------------
-# 4. Prepare Input Data
-# ---------------------------
-# Encode season dynamically
 season_dict = {"season_summer": 0, "season_monsoon": 0, "season_winter": 0}
 season_dict[f"season_{season}"] = 1
 
@@ -94,26 +83,18 @@ input_data = pd.DataFrame([{
     **season_dict
 }])
 
-# Align columns with training data
 input_data = input_data.reindex(columns=training_columns, fill_value=0)
-
-# ---------------------------
-# 5. Prediction
-# ---------------------------
 if st.sidebar.button("Predict Outbreak Risk"):
     prediction = model.predict(input_data)[0]
     probability = model.predict_proba(input_data)[0][1]
 
-    st.subheader("🔮 Prediction Result")
+    st.subheader("Prediction Result")
     if prediction == 1:
-        st.error(f"⚠️ High Risk of Outbreak (Probability: {probability:.2f})")
+        st.error(f"High Risk of Outbreak (Probability: {probability:.2f})")
     else:
-        st.success(f"✅ Low Risk of Outbreak (Probability: {probability:.2f})")
+        st.success(f"Low Risk of Outbreak (Probability: {probability:.2f})")
 
-# ---------------------------
-# 6. Model Evaluation & Plots
-# ---------------------------
-st.subheader("📊 Model Performance on Test Data")
+st.subheader("Model Performance on Test Data")
 
 y_pred = model.predict(X_test)
 report = classification_report(y_test, y_pred, output_dict=True)
