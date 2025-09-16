@@ -1,0 +1,8 @@
+Water Quality Monitoring Report
+
+The turbidity of the sample is measured at 5.8 NTU.
+pH level recorded: 7.1
+Bacteria presence detected: Yes
+Rainfall in the past week: 130 mm
+Reported disease cases last week: 18
+Current season: monsoon
